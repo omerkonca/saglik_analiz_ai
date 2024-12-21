@@ -1,12 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { SymptomForm } from '../components/SymptomForm';
 import { FormData } from '../types';
 import { MedicalDisclaimer } from '../components/MedicalDisclaimer';
+import { NearbyHealthcare } from '../components/NearbyHealthcare';
+import { AnalysisResult } from '../components/AnalysisResult';
+import { analyzeWithAI } from '../services/aiAnalysis';
 
 export const Analysis: React.FC = () => {
+  const [analysis, setAnalysis] = useState<any>(null);
+  const [showNearbyHealthcare, setShowNearbyHealthcare] = useState(false);
+
   const handleAnalysis = (data: FormData) => {
-    console.log('Analysis data:', data);
-    // Handle analysis logic here
+    const result = analyzeWithAI(data);
+    setAnalysis(result);
+    setShowNearbyHealthcare(result.requiresImmediate);
   };
 
   return (
@@ -21,9 +28,23 @@ export const Analysis: React.FC = () => {
           </p>
         </div>
 
-        <div className="bg-white shadow rounded-lg p-6 md:p-8">
+        <div className="bg-white shadow rounded-lg p-6 md:p-8 mb-8">
           <SymptomForm onSubmit={handleAnalysis} />
         </div>
+
+        {analysis && (
+          <div className="mb-8 animate-fade-in">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Analiz Sonuçları</h2>
+            <AnalysisResult analysis={analysis} />
+          </div>
+        )}
+
+        {showNearbyHealthcare && (
+          <div className="mt-8 animate-fade-in">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Size En Yakın Sağlık Kuruluşları</h2>
+            <NearbyHealthcare />
+          </div>
+        )}
       </div>
     </div>
   );

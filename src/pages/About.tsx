@@ -63,7 +63,7 @@ export const About: React.FC = () => {
             Sorularınız veya önerileriniz için bize ulaşın:
           </p>
           <a href="mailto:destek@saglikanalizi.com" className="text-indigo-600 hover:text-indigo-800">
-            destek@saglikanalizi.netlify.app
+            destek@saglikanalizi.com
           </a>
         </div>
       </div>
