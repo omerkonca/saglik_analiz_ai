@@ -4,8 +4,8 @@ import { AnalysisHistory } from '../components/AnalysisHistory';
 
 export const Profile: React.FC = () => {
   const userInfo = {
-    name: 'Ahmet Yılmaz',
-    email: 'ahmet@example.com',
+    name: 'Ömer Faruk KONCA',
+    email: 'omerkonca01@gmail.com',
     memberSince: '2024'
   };
 
