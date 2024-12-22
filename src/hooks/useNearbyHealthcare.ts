@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { Loader } from '@googlemaps/js-api-loader';
+import { GOOGLE_MAPS_API_KEY } from '../config/maps';
 
 export interface HealthcareFacility {
   id: string;
@@ -20,6 +22,7 @@ export const useNearbyHealthcare = () => {
   const [userLocation, setUserLocation] = useState<{lat: number; lng: number} | null>(null);
 
   useEffect(() => {
+    // Get user's location
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -43,14 +46,19 @@ export const useNearbyHealthcare = () => {
     const searchNearbyFacilities = async () => {
       if (!userLocation) return;
 
+      const loader = new Loader({
+        apiKey: GOOGLE_MAPS_API_KEY,
+        version: 'weekly',
+        libraries: ['places']
+      });
+
       try {
-        const service = new google.maps.places.PlacesService(
-          document.createElement('div')
-        );
+        const google = await loader.load();
+        const service = new google.maps.places.PlacesService(document.createElement('div'));
 
         const request = {
           location: userLocation,
-          radius: 5000,
+          radius: 5000, // 5km radius
           type: 'hospital'
         };
 
@@ -60,7 +68,7 @@ export const useNearbyHealthcare = () => {
               id: place.place_id || Math.random().toString(),
               name: place.name || 'İsimsiz Sağlık Kuruluşu',
               address: place.vicinity || '',
-              distance: 0, // Will be calculated
+              distance: 0, // Will be calculated if needed
               location: {
                 lat: place.geometry?.location?.lat() || 0,
                 lng: place.geometry?.location?.lng() || 0
