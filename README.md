@@ -2,12 +2,30 @@
 
 Sağlık Analiz AI, sağlık verilerini analiz etmek ve anlamlı içgörüler elde etmek için geliştirilen bir yapay zeka destekli analiz platformudur. Bu proje, sağlık sektöründe veri odaklı kararlar almayı kolaylaştırmak ve sağlık profesyonellerine destek olmak amacıyla tasarlanmıştır.
 
+---
+
 ## Projenin Öne Çıkan Özellikleri
 
-- **Gelişmiş Veri Analizi**: Sağlık verilerini işleyerek doğru ve anlamlı tahminler sunar.
-- **Kullanıcı Dostu Arayüz**: Verilerin kolayca görselleştirilmesi ve analizi için tasarlanmış sade bir kullanıcı arayüzü.
-- **Modüler Yapı**: Farklı sağlık analiz ihtiyaçlarına yönelik özelleştirilebilir modüller.
-- **Performans Odaklı Algoritmalar**: Hızlı ve güvenilir analiz sağlayan optimize edilmiş yapay zeka algoritmaları.
+**Gelişmiş Veri Analizi**\
+Sağlık verilerini işleyerek doğru ve anlamlı tahminler sunar.
+
+**Kullanıcı Dostu Arayüz**\
+Verilerin kolayca görselleştirilmesi ve analizi için tasarlanmış sade bir kullanıcı arayüzü.
+
+**Modüler Yapı**\
+Farklı sağlık analiz ihtiyaçlarına yönelik özelleştirilebilir modüller.
+
+**Performans Odaklı Algoritmalar**\
+Hızlı ve güvenilir analiz sağlayan optimize edilmiş yapay zeka algoritmaları.
+
+---
+
+## Ana Sayfa Görünümü
+
+
+
+![image](https://github.com/user-attachments/assets/3f31c42e-8a72-4d43-b806-523c1635e32c)
+
 
 ---
 
@@ -65,9 +83,9 @@ http://localhost:3000
 
 ## Proje Yapısı
 
-- **src/**: Uygulamanın temel kodları.
-- **public/**: Statik dosyalar ve kaynaklar.
-- **package.json**: Proje bağımlılıkları ve komutları.
+- **src/**: Uygulamanın temel kodları
+- **public/**: Statik dosyalar ve kaynaklar
+- **package.json**: Proje bağımlılıkları ve komutları
 
 ---
 
@@ -75,13 +93,17 @@ http://localhost:3000
 
 Sağlık Analiz AI projesine katkıda bulunmak isterseniz aşağıdaki adımları izleyebilirsiniz:
 
-1. **Bir Fork Oluşturun**: Projeyi kendi GitHub hesabınıza forklayın.
-2. **Bir Branch Oluşturun**: Yeni bir özellik ya da düzeltme için bir branch açın.
+1. **Bir Fork Oluşturun**\
+   Projeyi kendi GitHub hesabınıza forklayın.
+2. **Bir Branch Oluşturun**\
+   Yeni bir özellik ya da düzeltme için bir branch açın:
    ```bash
    git checkout -b yeni-ozellik
    ```
-3. **Değişikliklerinizi Yapın**: Kodunuzu geliştirin ve test edin.
-4. **Pull Request Gönderin**: Değişikliklerinizi ana projeye dahil etmek için bir pull request oluşturun.
+3. **Değişikliklerinizi Yapın**\
+   Kodunuzu geliştirin ve test edin.
+4. **Pull Request Gönderin**\
+   Değişikliklerinizi ana projeye dahil etmek için bir pull request oluşturun.
 
 ---
 
