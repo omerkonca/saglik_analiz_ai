@@ -8,6 +8,17 @@ export const NearbyHealthcare: React.FC = () => {
   const { facilities, loading, error, userLocation } = useNearbyHealthcare();
   const [selectedFacility, setSelectedFacility] = useState<string | null>(null);
 
+  if (!import.meta.env.VITE_GOOGLE_MAPS_API_KEY) {
+    return (
+      <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
+        <div className="flex items-center">
+          <AlertCircle className="h-5 w-5 text-yellow-400 mr-2" />
+          <p className="text-yellow-700">Harita servisi geçici olarak kullanılamıyor.</p>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="text-center py-8">
@@ -23,6 +34,19 @@ export const NearbyHealthcare: React.FC = () => {
         <div className="flex items-center">
           <AlertCircle className="h-5 w-5 text-red-400 mr-2" />
           <p className="text-red-700">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!userLocation) {
+    return (
+      <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
+        <div className="flex items-center">
+          <AlertCircle className="h-5 w-5 text-yellow-400 mr-2" />
+          <p className="text-yellow-700">
+            Konum izni gerekli. Lütfen konum erişimine izin verin.
+          </p>
         </div>
       </div>
     );

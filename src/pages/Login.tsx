@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Activity, Mail, Lock } from 'lucide-react';
 import { useLoginForm } from '../hooks/useLoginForm';
+import { SocialLogin } from '../components/SocialLogin';
 
 export const Login: React.FC = () => {
   const {
@@ -28,6 +29,21 @@ export const Login: React.FC = () => {
               Kayıt olun
             </Link>
           </p>
+        </div>
+
+        <div className="mt-8">
+          <SocialLogin />
+          
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-gray-50 text-gray-500">veya email ile devam edin</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -64,8 +80,9 @@ export const Login: React.FC = () => {
                 type="password"
                 autoComplete="current-password"
                 required
+                minLength={6}
                 className="appearance-none rounded-none relative block w-full px-3 py-2 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Şifre"
+                placeholder="Şifre (en az 6 karakter)"
                 value={password}
                 onChange={handlePasswordChange}
               />

@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { Loader } from '@googlemaps/js-api-loader';
 import { GOOGLE_MAPS_API_KEY, mapStyles } from '../config/maps';
-import type { HealthcareFacility } from '../hooks/useNearbyHealthcare';
+import type { HealthcareFacility } from '../types';
 
 interface MapProps {
   userLocation: { lat: number; lng: number } | null;
@@ -21,48 +20,47 @@ export const Map: React.FC<MapProps> = ({
   const markersRef = useRef<google.maps.Marker[]>([]);
 
   useEffect(() => {
-    const initMap = async () => {
-      const loader = new Loader({
-        apiKey: GOOGLE_MAPS_API_KEY,
-        version: 'weekly',
-        libraries: ['places']
-      });
+    if (!GOOGLE_MAPS_API_KEY || !userLocation || !mapRef.current) return;
 
+    const initMap = async () => {
       try {
+        const { Loader } = await import('@googlemaps/js-api-loader');
+        const loader = new Loader({
+          apiKey: GOOGLE_MAPS_API_KEY,
+          version: 'weekly',
+          libraries: ['places']
+        });
+
         const google = await loader.load();
         
-        if (mapRef.current && !mapInstanceRef.current && userLocation) {
-          const map = new google.maps.Map(mapRef.current, {
-            center: userLocation,
-            zoom: 14,
-            styles: mapStyles,
-          });
+        const map = new google.maps.Map(mapRef.current, {
+          center: userLocation,
+          zoom: 14,
+          styles: mapStyles,
+        });
 
-          // Add user location marker
-          new google.maps.Marker({
-            position: userLocation,
-            map,
-            icon: {
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 10,
-              fillColor: '#4F46E5',
-              fillOpacity: 0.7,
-              strokeWeight: 2,
-              strokeColor: '#312E81'
-            },
-            title: 'Konumunuz'
-          });
+        // Add user location marker
+        new google.maps.Marker({
+          position: userLocation,
+          map,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 10,
+            fillColor: '#4F46E5',
+            fillOpacity: 0.7,
+            strokeWeight: 2,
+            strokeColor: '#312E81'
+          },
+          title: 'Konumunuz'
+        });
 
-          mapInstanceRef.current = map;
-        }
+        mapInstanceRef.current = map;
       } catch (error) {
         console.error('Error loading Google Maps:', error);
       }
     };
 
-    if (userLocation) {
-      initMap();
-    }
+    initMap();
   }, [userLocation]);
 
   // Update markers when facilities change
@@ -98,8 +96,8 @@ export const Map: React.FC<MapProps> = ({
   return (
     <div 
       ref={mapRef} 
-      className="w-full h-full rounded-lg"
-      style={{ border: '2px solid #E5E7EB' }}
+      className="w-full h-full rounded-lg shadow-lg"
+      style={{ minHeight: '400px' }}
     />
   );
 };
