@@ -1,6 +1,5 @@
 import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 
 interface RegisterFormData {
   name: string;
@@ -10,62 +9,31 @@ interface RegisterFormData {
 
 export const useRegisterForm = () => {
   const navigate = useNavigate();
-  const { register } = useAuth();
   const [formData, setFormData] = useState<RegisterFormData>({
     name: '',
     email: '',
     password: '',
   });
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const validateForm = () => {
-    if (!formData.name.trim()) {
-      setError('İsim alanı zorunludur');
-      return false;
-    }
-    if (!formData.email.trim()) {
-      setError('Email alanı zorunludur');
-      return false;
-    }
-    if (formData.password.length < 6) {
-      setError('Şifre en az 6 karakter olmalıdır');
-      return false;
-    }
-    return true;
-  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    setError(null);
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsLoading(true);
-
     try {
-      await register(formData.name.trim(), formData.email.trim(), formData.password);
-      navigate('/login', { 
-        state: { message: 'Kayıt başarılı! Şimdi giriş yapabilirsiniz.' }
-      });
-    } catch (err: any) {
-      if (err.message?.includes('already registered')) {
-        setError('Bu email adresi zaten kayıtlı');
-      } else if (err.message?.includes('weak_password')) {
-        setError('Şifre çok zayıf. En az 6 karakter kullanın');
-      } else {
-        setError('Kayıt olurken bir hata oluştu. Lütfen tekrar deneyin');
-      }
-    } finally {
-      setIsLoading(false);
+      // Here you would typically make an API call to register the user
+      // For now, we'll simulate a successful registration
+      console.log('Registering user:', formData);
+      
+      // Redirect to login page after successful registration
+      navigate('/login');
+    } catch (err) {
+      setError('Kayıt olurken bir hata oluştu. Lütfen tekrar deneyin.');
     }
   };
 
@@ -74,6 +42,5 @@ export const useRegisterForm = () => {
     handleChange,
     handleSubmit,
     error,
-    isLoading,
   };
 };

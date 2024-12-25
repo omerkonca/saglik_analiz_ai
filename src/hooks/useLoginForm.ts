@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -10,26 +10,24 @@ export const useLoginForm = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
-
-    if (!email.trim() || password.length < 6) {
-      setError('Geçerli bir email ve en az 6 karakterli şifre giriniz');
-      return;
-    }
-
     setIsLoading(true);
 
     try {
-      await login(email.trim(), password);
+      await login(email, password);
       navigate('/profile');
-    } catch (err: any) {
-      setError(
-        err.message === 'Invalid login credentials'
-          ? 'Email veya şifre hatalı'
-          : 'Giriş yapılırken bir hata oluştu'
-      );
+    } catch (err) {
+      setError('Giriş yapılırken bir hata oluştu. Lütfen bilgilerinizi kontrol edin.');
     } finally {
       setIsLoading(false);
     }
@@ -37,11 +35,11 @@ export const useLoginForm = () => {
 
   return {
     email,
-    setEmail,
     password,
-    setPassword,
     error,
     isLoading,
+    handleEmailChange,
+    handlePasswordChange,
     handleSubmit,
   };
 };

@@ -1,6 +1,19 @@
 import { useState, useEffect } from 'react';
-import { initializeGoogleMaps } from '../config/maps';
-import type { HealthcareFacility } from '../types';
+import { Loader } from '@googlemaps/js-api-loader';
+import { GOOGLE_MAPS_API_KEY } from '../config/maps';
+
+export interface HealthcareFacility {
+  id: string;
+  name: string;
+  address: string;
+  distance: number;
+  location: {
+    lat: number;
+    lng: number;
+  };
+  rating?: number;
+  isOpen?: boolean;
+}
 
 export const useNearbyHealthcare = () => {
   const [facilities, setFacilities] = useState<HealthcareFacility[]>([]);
@@ -9,69 +22,74 @@ export const useNearbyHealthcare = () => {
   const [userLocation, setUserLocation] = useState<{lat: number; lng: number} | null>(null);
 
   useEffect(() => {
-    let isMounted = true;
-
-    const initialize = async () => {
-      try {
-        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject);
-        });
-
-        const location = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
-        };
-
-        if (!isMounted) return;
-        setUserLocation(location);
-
-        const google = await initializeGoogleMaps();
-        const service = new google.maps.places.PlacesService(document.createElement('div'));
-
-        const results = await new Promise((resolve, reject) => {
-          service.nearbySearch({
-            location,
-            radius: 5000,
-            type: 'hospital',
-            keyword: 'hastane'
-          }, (results, status) => {
-            if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-              resolve(results);
-            } else {
-              reject(new Error('Hastane araması başarısız oldu'));
-            }
+    // Get user's location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
           });
-        });
-
-        if (!isMounted) return;
-        setFacilities(results.map(place => ({
-          id: place.place_id || Math.random().toString(),
-          name: place.name || 'İsimsiz Hastane',
-          address: place.vicinity || '',
-          location: {
-            lat: place.geometry?.location?.lat() || 0,
-            lng: place.geometry?.location?.lng() || 0
-          },
-          rating: place.rating,
-          isOpen: place.opening_hours?.isOpen()
-        })));
-      } catch (err: any) {
-        if (isMounted) {
-          setError(err.message || 'Hastaneler bulunamadı');
-        }
-      } finally {
-        if (isMounted) {
+        },
+        (error) => {
+          setError('Konum alınamadı. Lütfen konum izni verin.');
           setLoading(false);
         }
+      );
+    } else {
+      setError('Tarayıcınız konum hizmetlerini desteklemiyor.');
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const searchNearbyFacilities = async () => {
+      if (!userLocation) return;
+
+      const loader = new Loader({
+        apiKey: GOOGLE_MAPS_API_KEY,
+        version: 'weekly',
+        libraries: ['places']
+      });
+
+      try {
+        const google = await loader.load();
+        const service = new google.maps.places.PlacesService(document.createElement('div'));
+
+        const request = {
+          location: userLocation,
+          radius: 5000, // 5km radius
+          type: 'hospital'
+        };
+
+        service.nearbySearch(request, (results, status) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+            const nearbyFacilities = results.map(place => ({
+              id: place.place_id || Math.random().toString(),
+              name: place.name || 'İsimsiz Sağlık Kuruluşu',
+              address: place.vicinity || '',
+              distance: 0, // Will be calculated if needed
+              location: {
+                lat: place.geometry?.location?.lat() || 0,
+                lng: place.geometry?.location?.lng() || 0
+              },
+              rating: place.rating,
+              isOpen: place.opening_hours?.isOpen()
+            }));
+            setFacilities(nearbyFacilities);
+          }
+          setLoading(false);
+        });
+      } catch (err) {
+        setError('Sağlık kuruluşları aranırken bir hata oluştu.');
+        setLoading(false);
       }
     };
 
-    initialize();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+    if (userLocation) {
+      searchNearbyFacilities();
+    }
+  }, [userLocation]);
 
   return { facilities, loading, error, userLocation };
 };

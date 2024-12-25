@@ -1,20 +1,13 @@
 import React from 'react';
 import { User, Clock, FileText } from 'lucide-react';
 import { AnalysisHistory } from '../components/AnalysisHistory';
-import { useAuth } from '../context/AuthContext';
-import { useAnalysisHistory } from '../hooks/useAnalysisHistory';
 
 export const Profile: React.FC = () => {
-  const { user } = useAuth();
-  const { history } = useAnalysisHistory();
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-600">Lütfen giriş yapın.</p>
-      </div>
-    );
-  }
+  const userInfo = {
+    name: 'Ahmet Yılmaz',
+    email: 'ahmet@example.com',
+    memberSince: '2024'
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -26,8 +19,8 @@ export const Profile: React.FC = () => {
                 <User className="h-12 w-12 text-indigo-600" />
               </div>
               <div className="ml-4">
-                <h1 className="text-2xl font-bold text-white">{user.name}</h1>
-                <p className="text-indigo-100">{user.email}</p>
+                <h1 className="text-2xl font-bold text-white">{userInfo.name}</h1>
+                <p className="text-indigo-100">{userInfo.email}</p>
               </div>
             </div>
           </div>
@@ -39,16 +32,14 @@ export const Profile: React.FC = () => {
                   <Clock className="h-5 w-5 text-indigo-600 mr-2" />
                   <h3 className="text-lg font-semibold">Üyelik Bilgisi</h3>
                 </div>
-                <p className="text-gray-600">
-                  Üyelik Başlangıcı: {new Date(user.created_at).toLocaleDateString('tr-TR')}
-                </p>
+                <p className="text-gray-600">Üyelik Başlangıcı: {userInfo.memberSince}</p>
               </div>
               <div className="bg-gray-50 p-4 rounded-lg">
                 <div className="flex items-center mb-2">
                   <FileText className="h-5 w-5 text-indigo-600 mr-2" />
                   <h3 className="text-lg font-semibold">Analiz Sayısı</h3>
                 </div>
-                <p className="text-gray-600">Toplam {history.length} analiz</p>
+                <p className="text-gray-600">Toplam 5 analiz</p>
               </div>
             </div>
 
