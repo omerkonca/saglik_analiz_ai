@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Activity, User, Info, Menu, X } from 'lucide-react';
+import { Activity, User, Info, Menu, X, MessageSquare } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const Navbar: React.FC = () => {
@@ -13,6 +13,7 @@ export const Navbar: React.FC = () => {
   const navItems = [
     { path: '/about', icon: Info, label: 'Hakkında' },
     { path: '/analysis', icon: Activity, label: 'Analiz' },
+    { path: '/contact', icon: MessageSquare, label: 'İletişim' },
     { path: user ? '/profile' : '/login', icon: User, label: user ? 'Profil' : 'Giriş' },
   ];
 

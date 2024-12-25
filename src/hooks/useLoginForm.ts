@@ -10,23 +10,12 @@ export const useLoginForm = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const validateForm = () => {
-    if (!email.trim()) {
-      setError('Email alanı zorunludur');
-      return false;
-    }
-    if (password.length < 6) {
-      setError('Şifre en az 6 karakter olmalıdır');
-      return false;
-    }
-    return true;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (!validateForm()) {
+    if (!email.trim() || password.length < 6) {
+      setError('Geçerli bir email ve en az 6 karakterli şifre giriniz');
       return;
     }
 
@@ -48,11 +37,11 @@ export const useLoginForm = () => {
 
   return {
     email,
+    setEmail,
     password,
+    setPassword,
     error,
     isLoading,
-    setEmail,
-    setPassword,
     handleSubmit,
   };
 };

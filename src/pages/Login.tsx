@@ -10,8 +10,8 @@ export const Login: React.FC = () => {
     password,
     error,
     isLoading,
-    handleEmailChange,
-    handlePasswordChange,
+    setEmail,
+    setPassword,
     handleSubmit,
   } = useLoginForm();
 
@@ -67,7 +67,7 @@ export const Login: React.FC = () => {
                 className="appearance-none rounded-none relative block w-full px-3 py-2 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Email adresi"
                 value={email}
-                onChange={handleEmailChange}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div className="relative">
@@ -84,7 +84,7 @@ export const Login: React.FC = () => {
                 className="appearance-none rounded-none relative block w-full px-3 py-2 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Şifre (en az 6 karakter)"
                 value={password}
-                onChange={handlePasswordChange}
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
           </div>
