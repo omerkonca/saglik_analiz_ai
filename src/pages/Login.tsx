@@ -1,18 +1,29 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Activity, Mail, Lock } from 'lucide-react';
 import { useLoginForm } from '../hooks/useLoginForm';
+import { useAuth } from '../context/AuthContext';
 
 export const Login: React.FC = () => {
+  const location = useLocation();
+  const { error: authError, clearError } = useAuth();
   const {
     email,
     password,
-    error,
+    error: formError,
     isLoading,
-    handleEmailChange,
-    handlePasswordChange,
+    setEmail,
+    setPassword,
     handleSubmit,
   } = useLoginForm();
+
+  // Clear any auth errors when component mounts or unmounts
+  useEffect(() => {
+    clearError();
+    return () => clearError();
+  }, [clearError]);
+
+  const message = location.state?.message;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -30,13 +41,19 @@ export const Login: React.FC = () => {
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded">
-              <p className="text-red-700">{error}</p>
-            </div>
-          )}
+        {message && (
+          <div className="bg-green-50 border-l-4 border-green-400 p-4 rounded">
+            <p className="text-green-700">{message}</p>
+          </div>
+        )}
 
+        {(formError || authError) && (
+          <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded">
+            <p className="text-red-700">{formError || authError}</p>
+          </div>
+        )}
+
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -51,7 +68,7 @@ export const Login: React.FC = () => {
                 className="appearance-none rounded-none relative block w-full px-3 py-2 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Email adresi"
                 value={email}
-                onChange={handleEmailChange}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div className="relative">
@@ -64,10 +81,11 @@ export const Login: React.FC = () => {
                 type="password"
                 autoComplete="current-password"
                 required
+                minLength={6}
                 className="appearance-none rounded-none relative block w-full px-3 py-2 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Şifre"
                 value={password}
-                onChange={handlePasswordChange}
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
           </div>

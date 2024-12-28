@@ -1,16 +1,17 @@
-import React, { useEffect, useRef } from 'react';
-import { Loader } from '@googlemaps/js-api-loader';
-import { GOOGLE_MAPS_API_KEY, mapStyles } from '../config/maps';
-import type { HealthcareFacility } from '../hooks/useNearbyHealthcare';
+import React, { useEffect, useRef, useState } from 'react';
+import { createMapLoader, createUserLocationMarker } from '../utils/mapHelpers';
+import { handleMapError } from '../utils/mapErrors';
+import { MapError } from './MapErrorBoundary';
+import type { HealthcareFacility } from '../types';
 
-interface MapProps {
+interface Props {
   userLocation: { lat: number; lng: number } | null;
   facilities: HealthcareFacility[];
   selectedFacilityId: string | null;
   onFacilitySelect: (id: string) => void;
 }
 
-export const Map: React.FC<MapProps> = ({
+export const Map: React.FC<Props> = ({
   userLocation,
   facilities,
   selectedFacilityId,
@@ -19,61 +20,44 @@ export const Map: React.FC<MapProps> = ({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const initMap = async () => {
-      const loader = new Loader({
-        apiKey: GOOGLE_MAPS_API_KEY,
-        version: 'weekly',
-        libraries: ['places']
-      });
+      if (!userLocation || !mapRef.current) {
+        return;
+      }
 
       try {
+        const loader = createMapLoader();
         const google = await loader.load();
         
-        if (mapRef.current && !mapInstanceRef.current && userLocation) {
-          const map = new google.maps.Map(mapRef.current, {
-            center: userLocation,
-            zoom: 14,
-            styles: mapStyles,
-          });
+        const map = new google.maps.Map(mapRef.current, {
+          center: userLocation,
+          zoom: 14,
+          mapTypeControl: false,
+          fullscreenControl: false,
+          streetViewControl: false
+        });
 
-          // Add user location marker
-          new google.maps.Marker({
-            position: userLocation,
-            map,
-            icon: {
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 10,
-              fillColor: '#4F46E5',
-              fillOpacity: 0.7,
-              strokeWeight: 2,
-              strokeColor: '#312E81'
-            },
-            title: 'Konumunuz'
-          });
-
-          mapInstanceRef.current = map;
-        }
-      } catch (error) {
-        console.error('Error loading Google Maps:', error);
+        createUserLocationMarker(map, userLocation);
+        mapInstanceRef.current = map;
+      } catch (err) {
+        const errorMessage = handleMapError(err);
+        setError(errorMessage);
+        console.error('Map initialization error:', err);
       }
     };
 
-    if (userLocation) {
-      initMap();
-    }
+    initMap();
   }, [userLocation]);
 
-  // Update markers when facilities change
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
-    // Clear existing markers
     markersRef.current.forEach(marker => marker.setMap(null));
     markersRef.current = [];
 
-    // Add new markers
     facilities.forEach(facility => {
       const marker = new google.maps.Marker({
         position: facility.location,
@@ -87,19 +71,20 @@ export const Map: React.FC<MapProps> = ({
           google.maps.Animation.BOUNCE : undefined
       });
 
-      marker.addListener('click', () => {
-        onFacilitySelect(facility.id);
-      });
-
+      marker.addListener('click', () => onFacilitySelect(facility.id));
       markersRef.current.push(marker);
     });
   }, [facilities, selectedFacilityId]);
 
+  if (error) {
+    return <MapError error={error} />;
+  }
+
   return (
     <div 
       ref={mapRef} 
-      className="w-full h-full rounded-lg"
-      style={{ border: '2px solid #E5E7EB' }}
+      className="w-full h-full rounded-lg shadow-lg"
+      style={{ minHeight: '400px' }}
     />
   );
 };

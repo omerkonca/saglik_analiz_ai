@@ -5,15 +5,24 @@ import { MedicalDisclaimer } from '../components/MedicalDisclaimer';
 import { NearbyHealthcare } from '../components/NearbyHealthcare';
 import { AnalysisResult } from '../components/AnalysisResult';
 import { analyzeWithAI } from '../services/aiAnalysis';
+import { useAnalysisHistory } from '../hooks/useAnalysisHistory';
+import { useAuth } from '../context/AuthContext';
 
 export const Analysis: React.FC = () => {
   const [analysis, setAnalysis] = useState<any>(null);
   const [showNearbyHealthcare, setShowNearbyHealthcare] = useState(false);
+  const { addAnalysis } = useAnalysisHistory();
+  const { user } = useAuth();
 
-  const handleAnalysis = (data: FormData) => {
+  const handleAnalysis = async (data: FormData) => {
     const result = analyzeWithAI(data);
     setAnalysis(result);
     setShowNearbyHealthcare(result.requiresImmediate);
+    
+    // Save analysis to history only if user is logged in
+    if (user) {
+      await addAnalysis(data.symptoms, result);
+    }
   };
 
   return (

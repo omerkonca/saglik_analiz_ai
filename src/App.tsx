@@ -7,13 +7,14 @@ import { Register } from './pages/Register';
 import { Profile } from './pages/Profile';
 import { About } from './pages/About';
 import { Analysis } from './pages/Analysis';
+import { Contact } from './pages/Contact';
 import { AuthProvider } from './context/AuthContext';
 import './styles/animations.css';
 
 const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <Router>
+    <Router>
+      <AuthProvider>
         <div className="min-h-screen bg-gray-50">
           <Navbar />
           <Routes>
@@ -23,10 +24,11 @@ const App: React.FC = () => {
             <Route path="/profile" element={<Profile />} />
             <Route path="/about" element={<About />} />
             <Route path="/analysis" element={<Analysis />} />
+            <Route path="/contact" element={<Contact />} />
           </Routes>
         </div>
-      </Router>
-    </AuthProvider>
+      </AuthProvider>
+    </Router>
   );
 };
 
