@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { AuthUser, fetchUserProfile, signIn, signUp, signOut } from '../lib/auth';
+import { AppError } from '../utils/errorHandling';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -54,10 +55,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setError(null);
       setLoading(true);
-      await signIn(email, password);
-      navigate('/profile');
+      const { user: authUser } = await signIn(email, password);
+      if (authUser) {
+        navigate('/profile');
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Giriş yapılırken bir hata oluştu');
+      if (err instanceof AppError) {
+        setError(err.message);
+        if (err.code === 'auth/email-not-verified') {
+          // Handle unverified email case
+          navigate('/verify-email', { 
+            state: { email }
+          });
+          return;
+        }
+      } else {
+        setError('Giriş yapılırken bir hata oluştu');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const register = async (name: string, email: string, password: string) => {
+    try {
+      setError(null);
+      setLoading(true);
+      await signUp(name, email, password);
+      navigate('/verify-email', { 
+        state: { 
+          email,
+          message: 'Hesabınız oluşturuldu! Lütfen email adresinizi doğrulayın.' 
+        }
+      });
+    } catch (err) {
+      if (err instanceof AppError) {
+        setError(err.message);
+      } else {
+        setError('Kayıt olurken bir hata oluştu');
+      }
     } finally {
       setLoading(false);
     }
@@ -70,22 +106,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       navigate('/login');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Çıkış yapılırken bir hata oluştu');
-    }
-  };
-
-  const register = async (name: string, email: string, password: string) => {
-    try {
-      setError(null);
-      setLoading(true);
-      await signUp(name, email, password);
-      navigate('/login', { 
-        state: { message: 'Kayıt başarılı! Şimdi giriş yapabilirsiniz.' }
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Kayıt olurken bir hata oluştu');
-    } finally {
-      setLoading(false);
+      if (err instanceof AppError) {
+        setError(err.message);
+      } else {
+        setError('Çıkış yapılırken bir hata oluştu');
+      }
     }
   };
 

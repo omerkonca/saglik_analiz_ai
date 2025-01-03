@@ -32,7 +32,8 @@ export const initializeGoogleMaps = async () => {
       apiKey: GOOGLE_MAPS_API_KEY,
       version: 'weekly',
       libraries: ['places'],
-      language: 'tr'
+      language: 'tr',
+      region: 'TR'
     });
 
     return await loader.load();

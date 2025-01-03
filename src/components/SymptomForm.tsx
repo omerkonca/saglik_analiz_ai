@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { AlertCircle } from 'lucide-react';
 import { FormData } from '../types';
 import { MedicalDisclaimer } from './MedicalDisclaimer';
 import { SymptomSelector } from './SymptomSelector';
@@ -15,17 +14,23 @@ export const SymptomForm: React.FC<{ onSubmit: (data: FormData) => void }> = ({ 
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
 
   const handleSymptomToggle = (symptom: string) => {
-    setSelectedSymptoms((prev) => {
+    setSelectedSymptoms(prev => {
       const newSymptoms = prev.includes(symptom)
-        ? prev.filter((s) => s !== symptom)
+        ? prev.filter(s => s !== symptom)
         : [...prev, symptom];
-      setFormData((prev) => ({ ...prev, symptoms: newSymptoms.join(', ') }));
+      
+      // Seçili semptomları string olarak formData'ya ekle
+      setFormData(prev => ({ ...prev, symptoms: newSymptoms.join(',') }));
       return newSymptoms;
     });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.age || !formData.gender || selectedSymptoms.length === 0) {
+      alert('Lütfen tüm gerekli alanları doldurun ve en az bir belirti seçin.');
+      return;
+    }
     onSubmit(formData);
   };
 
@@ -60,6 +65,8 @@ export const SymptomForm: React.FC<{ onSubmit: (data: FormData) => void }> = ({ 
             value={formData.age}
             onChange={(e) => setFormData({ ...formData, age: e.target.value })}
             required
+            min="0"
+            max="120"
           />
         </div>
 

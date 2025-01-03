@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { handleAuthError } from '../utils/errorHandling';
 
 // Cache for user profiles
 const userProfileCache = new Map<string, {
@@ -16,13 +17,13 @@ export interface AuthUser {
 }
 
 export const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
-  // Check cache first
-  const cached = userProfileCache.get(userId);
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    return cached.profile;
-  }
-
   try {
+    // Check cache first
+    const cached = userProfileCache.get(userId);
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      return cached.profile;
+    }
+
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -47,47 +48,66 @@ export const fetchUserProfile = async (userId: string): Promise<AuthUser | null>
 };
 
 export const signIn = async (email: string, password: string) => {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password
+    });
 
-  if (error) {
-    if (error.message.includes('Invalid login credentials')) {
-      throw new Error('Email veya şifre hatalı');
+    if (error) {
+      throw error;
     }
-    throw new Error('Giriş yapılırken bir hata oluştu');
-  }
 
-  return data;
+    if (!data?.user) {
+      throw new Error('Giriş başarısız');
+    }
+
+    const profile = await fetchUserProfile(data.user.id);
+    if (!profile) {
+      throw new Error('Kullanıcı profili bulunamadı');
+    }
+
+    return { user: data.user, profile };
+  } catch (error) {
+    throw handleAuthError(error);
+  }
 };
 
 export const signUp = async (name: string, email: string, password: string) => {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: { name }
-    }
-  });
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim().toLowerCase(),
+      password,
+      options: {
+        data: { name: name.trim() }
+      }
+    });
 
-  if (error) {
-    if (error.message.includes('already registered')) {
-      throw new Error('Bu email adresi zaten kayıtlı');
+    if (error) {
+      throw error;
     }
-    throw new Error('Kayıt olurken bir hata oluştu');
+
+    if (!data?.user) {
+      throw new Error('Kayıt başarısız');
+    }
+
+    return data;
+  } catch (error) {
+    throw handleAuthError(error);
   }
-
-  return data;
 };
 
 export const signOut = async () => {
-  // Clear cache on logout
-  userProfileCache.clear();
-  
-  const { error } = await supabase.auth.signOut();
-  if (error) {
-    throw new Error('Çıkış yapılırken bir hata oluştu');
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      throw error;
+    }
+    
+    // Clear cache on logout
+    userProfileCache.clear();
+  } catch (error) {
+    throw handleAuthError(error);
   }
 };
 

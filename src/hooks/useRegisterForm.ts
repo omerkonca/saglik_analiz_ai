@@ -57,12 +57,12 @@ export const useRegisterForm = () => {
         state: { message: 'Kayıt başarılı! Şimdi giriş yapabilirsiniz.' }
       });
     } catch (err: any) {
-      if (err.message?.includes('already registered')) {
-        setError('Bu email adresi zaten kayıtlı');
+      if (err.message?.includes('user_already_exists') || err.message?.includes('User already registered')) {
+        setError('Bu email adresi ile daha önce kayıt yapılmış. Lütfen giriş yapın veya farklı bir email adresi kullanın.');
       } else if (err.message?.includes('weak_password')) {
-        setError('Şifre çok zayıf. En az 6 karakter kullanın');
+        setError('Şifre çok zayıf. En az 6 karakter, bir büyük harf ve bir rakam kullanın.');
       } else {
-        setError('Kayıt olurken bir hata oluştu. Lütfen tekrar deneyin');
+        setError('Kayıt işlemi sırasında bir hata oluştu. Lütfen tekrar deneyin.');
       }
     } finally {
       setIsLoading(false);

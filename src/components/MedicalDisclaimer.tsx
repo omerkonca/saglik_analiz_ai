@@ -10,12 +10,17 @@ export const MedicalDisclaimer: React.FC = () => {
         </div>
         <div className="ml-3">
           <h3 className="text-sm font-medium text-yellow-800">
-            Önemli Not
+            Önemli Tıbbi Uyarı
           </h3>
-          <div className="mt-2 text-sm text-yellow-700">
+          <div className="mt-2 text-sm text-yellow-700 space-y-2">
             <p>
-              Bu uygulama sadece bilgilendirme amaçlıdır ve tıbbi teşhis yerine geçmez.
-              Ciddi sağlık sorunlarında mutlaka bir sağlık kuruluşuna başvurunuz.
+              Bu uygulama sadece bilgilendirme amaçlıdır ve kesinlikle tıbbi teşhis veya tedavi yerine geçmez.
+            </p>
+            <p>
+              Önerilen ilaçları kullanmadan önce mutlaka bir sağlık profesyoneline danışınız.
+            </p>
+            <p className="font-medium">
+              Ciddi veya acil sağlık sorunlarında vakit kaybetmeden bir sağlık kuruluşuna başvurunuz.
             </p>
           </div>
         </div>

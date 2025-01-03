@@ -1,4 +1,5 @@
 import emailjs from '@emailjs/browser';
+import { EMAIL_CONFIG } from '../config/email';
 
 export interface ContactMessage {
   name: string;
@@ -8,22 +9,27 @@ export interface ContactMessage {
 
 export const sendContactMessage = async (data: ContactMessage) => {
   try {
-    await emailjs.send(
-      'service_2qr85nl',
-      'template_k4515sp',
+    emailjs.init(EMAIL_CONFIG.PUBLIC_KEY);
+    
+    const response = await emailjs.send(
+      EMAIL_CONFIG.SERVICE_ID,
+      EMAIL_CONFIG.TEMPLATE_ID,
       {
-        to_name: 'Ömer',
+        to_name: 'Sağlık Analizi',
         from_name: data.name,
         from_email: data.email,
         message: data.message,
         reply_to: data.email
-      },
-      'Gg1K2qnm9RJ3BGzPv'
+      }
     );
+
+    if (response.status !== 200) {
+      throw new Error('Mesaj gönderilemedi');
+    }
     
     return true;
   } catch (error) {
     console.error('Error sending message:', error);
-    throw new Error('Mesaj gönderilirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
+    throw new Error('Mesaj şu anda gönderilemedi. Lütfen daha sonra tekrar deneyin.');
   }
-}
+};
