@@ -115,7 +115,7 @@ Bu proje [MIT Lisansı](LICENSE) ile lisanslanmıştır. Daha fazla bilgi için 
 
 ## İletişim
 
-Proje ile ilgili herhangi bir sorunuz veya öneriniz varsa, lütfen proje sahibi ile iletişime geçin:
+Proje ile ilgili herhangi bir sorunuz veya öneriniz varsa, lütfen benimle iletişime geçin:
 
 - **GitHub**: [omerkonca](https://github.com/omerkonca)
 - **E-posta**: [omerkonca01@gmail.com]
