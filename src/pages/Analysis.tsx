@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { SymptomForm } from '../components/SymptomForm';
 import { FormData } from '../types';
 import { MedicalDisclaimer } from '../components/MedicalDisclaimer';
-import { NearbyHealthcare } from '../components/NearbyHealthcare';
+import { MapPreview } from '../components/MapPreview';
 import { AnalysisResult } from '../components/AnalysisResult';
 import { analyzeWithAI } from '../services/aiAnalysis';
 import { useAnalysisHistory } from '../hooks/useAnalysisHistory';
@@ -19,7 +19,6 @@ export const Analysis: React.FC = () => {
     setAnalysis(result);
     setShowNearbyHealthcare(result.requiresImmediate);
     
-    // Save analysis to history only if user is logged in
     if (user) {
       await addAnalysis(data.symptoms, result);
     }
@@ -50,8 +49,7 @@ export const Analysis: React.FC = () => {
 
         {showNearbyHealthcare && (
           <div className="mt-8 animate-fade-in">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Size En Yakın Sağlık Kuruluşları</h2>
-            <NearbyHealthcare />
+            <MapPreview />
           </div>
         )}
       </div>

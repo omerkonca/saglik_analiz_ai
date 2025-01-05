@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { initializeGoogleMaps } from '../config/maps';
+import { createMapLoader } from '../config/maps';
 import type { HealthcareFacility } from '../types';
 import { handleMapError } from '../utils/mapErrors';
 
@@ -31,7 +31,8 @@ export const useNearbyHealthcare = () => {
         setUserLocation(location);
 
         // Initialize Google Maps
-        const google = await initializeGoogleMaps();
+        const loader = createMapLoader();
+        const google = await loader.load();
         
         // Create PlacesService
         const service = new google.maps.places.PlacesService(document.createElement('div'));

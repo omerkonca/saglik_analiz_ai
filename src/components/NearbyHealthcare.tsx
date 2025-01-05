@@ -9,16 +9,15 @@ export const NearbyHealthcare: React.FC = () => {
   const { facilities, loading, error, userLocation } = useNearbyHealthcare();
   const [selectedFacility, setSelectedFacility] = useState<string | null>(null);
 
-  // Show configuration error if API key is missing
   if (!GOOGLE_MAPS_API_KEY) {
     return (
       <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
         <div className="flex items-center">
           <AlertCircle className="h-5 w-5 text-yellow-400 mr-2" />
           <div>
-            <h3 className="text-sm font-medium text-yellow-800">Maps API Yapılandırması Gerekli</h3>
+            <h3 className="text-sm font-medium text-yellow-800">Harita Servisi Kullanılamıyor</h3>
             <p className="text-sm text-yellow-700 mt-1">
-              Harita servisi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.
+              Yakındaki sağlık kuruluşları şu anda listelenemiyor. Lütfen daha sonra tekrar deneyin.
             </p>
           </div>
         </div>
@@ -31,23 +30,6 @@ export const NearbyHealthcare: React.FC = () => {
       <div className="text-center py-8">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
         <p className="mt-4 text-gray-600">Yakındaki sağlık kuruluşları aranıyor...</p>
-      </div>
-    );
-  }
-
-  // Show API authorization error
-  if (error?.includes('ApiNotActivatedMapError')) {
-    return (
-      <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
-        <div className="flex items-center">
-          <AlertCircle className="h-5 w-5 text-yellow-400 mr-2" />
-          <div>
-            <h3 className="text-sm font-medium text-yellow-800">Maps API Erişimi Gerekli</h3>
-            <p className="text-sm text-yellow-700 mt-1">
-              Google Maps API erişimi henüz etkinleştirilmemiş. Alternatif olarak yakındaki hastaneleri listeleyelim.
-            </p>
-          </div>
-        </div>
       </div>
     );
   }

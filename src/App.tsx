@@ -8,6 +8,7 @@ import { Profile } from './pages/Profile';
 import { About } from './pages/About';
 import { Analysis } from './pages/Analysis';
 import { Contact } from './pages/Contact';
+import { VerifyEmail } from './pages/VerifyEmail';
 import { AuthProvider } from './context/AuthContext';
 import './styles/animations.css';
 
@@ -21,6 +22,7 @@ const App: React.FC = () => {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/about" element={<About />} />
             <Route path="/analysis" element={<Analysis />} />
