@@ -7,7 +7,7 @@ const userProfileCache = new Map<string, {
   timestamp: number;
 }>();
 
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 
 export interface AuthUser {
   id: string;
@@ -54,12 +54,16 @@ export const signIn = async (email: string, password: string) => {
       password
     });
 
-    if (error) {
-      throw error;
-    }
+    if (error) throw error;
 
     if (!data?.user) {
       throw new Error('Giriş başarısız');
+    }
+
+    // Check cache first
+    const cached = userProfileCache.get(data.user.id);
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      return { user: data.user, profile: cached.profile };
     }
 
     const profile = await fetchUserProfile(data.user.id);

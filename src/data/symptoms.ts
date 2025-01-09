@@ -30,4 +30,63 @@ export const symptomCategories = {
   digestive: 'Sindirim',
   neurological: 'Nörolojik',
   musculoskeletal: 'Kas-İskelet'
-};
+} as const;
+
+export const symptoms = {
+  general: [
+    'Ateş',
+    'Yorgunluk',
+    'Halsizlik',
+    'İştahsızlık',
+    'Kilo kaybı',
+    'Terleme',
+    'Üşüme',
+    'Baş dönmesi'
+  ],
+  respiratory: [
+    'Öksürük',
+    'Nefes darlığı',
+    'Boğaz ağrısı',
+    'Burun akıntısı',
+    'Burun tıkanıklığı',
+    'Hapşırma',
+    'Göğüs ağrısı'
+  ],
+  cardiovascular: [
+    'Çarpıntı',
+    'Göğüs ağrısı',
+    'Nefes darlığı',
+    'Ayaklarda şişme',
+    'Baş dönmesi',
+    'Bayılma hissi'
+  ],
+  digestive: [
+    'Karın ağrısı',
+    'Bulantı',
+    'Kusma',
+    'İshal',
+    'Kabızlık',
+    'Hazımsızlık',
+    'Mide yanması',
+    'Gaz'
+  ],
+  neurological: [
+    'Baş ağrısı',
+    'Baş dönmesi',
+    'Görme bozukluğu',
+    'Denge kaybı',
+    'Uyuşma',
+    'Karıncalanma',
+    'Hafıza problemleri',
+    'Konsantrasyon güçlüğü'
+  ],
+  musculoskeletal: [
+    'Eklem ağrısı',
+    'Kas ağrısı',
+    'Sırt ağrısı',
+    'Boyun ağrısı',
+    'Hareket kısıtlılığı',
+    'Şişlik',
+    'Kızarıklık'
+  ]
+} as const;
