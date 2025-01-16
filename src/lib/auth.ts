@@ -1,103 +1,71 @@
 import { supabase } from './supabase';
-import { handleAuthError } from '../utils/errorHandling';
-
-// Cache for user profiles
-const userProfileCache = new Map<string, {
-  profile: AuthUser;
-  timestamp: number;
-}>();
-
-const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+import type { User } from '@supabase/supabase-js';
 
 export interface AuthUser {
   id: string;
-  name: string;
   email: string;
-  created_at: string;
 }
-
-export const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
-  try {
-    // Check cache first
-    const cached = userProfileCache.get(userId);
-    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-      return cached.profile;
-    }
-
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
-    if (error) throw error;
-    
-    // Update cache
-    if (data) {
-      userProfileCache.set(userId, {
-        profile: data,
-        timestamp: Date.now()
-      });
-    }
-    
-    return data;
-  } catch (error) {
-    console.error('Error fetching user profile:', error);
-    return null;
-  }
-};
 
 export const signIn = async (email: string, password: string) => {
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
+      email,
       password
     });
 
-    if (error) throw error;
+    if (error) {
+      if (error.message === 'Email not confirmed') {
+        throw new Error('E-posta adresiniz henüz doğrulanmamış. Lütfen e-postanızı kontrol edin.');
+      }
+      throw new Error('Giriş yapılamadı: ' + error.message);
+    }
 
     if (!data?.user) {
-      throw new Error('Giriş başarısız');
+      throw new Error('Kullanıcı bilgileri alınamadı');
     }
 
-    // Check cache first
-    const cached = userProfileCache.get(data.user.id);
-    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-      return { user: data.user, profile: cached.profile };
-    }
-
-    const profile = await fetchUserProfile(data.user.id);
-    if (!profile) {
-      throw new Error('Kullanıcı profili bulunamadı');
-    }
-
-    return { user: data.user, profile };
+    return {
+      user: data.user,
+      profile: {
+        id: data.user.id,
+        email: data.user.email
+      }
+    };
   } catch (error) {
-    throw handleAuthError(error);
+    console.error('Giriş hatası:', error);
+    throw error;
   }
 };
 
-export const signUp = async (name: string, email: string, password: string) => {
+export const signUp = async (email: string, password: string, name: string) => {
   try {
-    const { data, error } = await supabase.auth.signUp({
-      email: email.trim().toLowerCase(),
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
       password,
-      options: {
-        data: { name: name.trim() }
-      }
     });
 
-    if (error) {
-      throw error;
+    if (authError) throw authError;
+
+    if (authData.user) {
+      // Profil oluştur
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: authData.user.id,
+          email: email,
+          name: name,
+          registration_date: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+
+      if (profileError) throw profileError;
     }
 
-    if (!data?.user) {
-      throw new Error('Kayıt başarısız');
-    }
-
-    return data;
+    return authData;
   } catch (error) {
-    throw handleAuthError(error);
+    console.error('Error signing up:', error);
+    throw error;
   }
 };
 
@@ -105,22 +73,10 @@ export const signOut = async () => {
   try {
     const { error } = await supabase.auth.signOut();
     if (error) {
-      throw error;
+      throw new Error('Çıkış yapılamadı: ' + error.message);
     }
-    
-    // Clear cache on logout
-    userProfileCache.clear();
   } catch (error) {
-    throw handleAuthError(error);
+    console.error('Çıkış hatası:', error);
+    throw error;
   }
 };
-
-// Clear expired cache entries periodically
-setInterval(() => {
-  const now = Date.now();
-  for (const [userId, cached] of userProfileCache.entries()) {
-    if (now - cached.timestamp > CACHE_DURATION) {
-      userProfileCache.delete(userId);
-    }
-  }
-}, CACHE_DURATION);

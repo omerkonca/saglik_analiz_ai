@@ -1,20 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
-if (!import.meta.env.VITE_SUPABASE_URL) {
-  throw new Error('Supabase URL bulunamadı. Lütfen .env dosyasını kontrol edin.');
-}
+// Bu değerleri Supabase proje ayarlarınızdan alın
+const supabaseUrl = 'https://ndscudrvygplwrtuccmj.supabase.co';  // Project Settings > API > Project URL
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kc2N1ZHJ2eWdwbHdydHVjY21qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcwMzU3OTAsImV4cCI6MjA1MjYxMTc5MH0.jO5HtTjAcPWd2_vHA9CyPxIthyzpGcxfhLEV0CJP83A';  // Project Settings > API > anon/public key
 
-if (!import.meta.env.VITE_SUPABASE_ANON_KEY) {
-  throw new Error('Supabase Anon Key bulunamadı. Lütfen .env dosyasını kontrol edin.');
-}
-
-export const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY,
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-    },
-  }
-);
+export const supabase = createClient(supabaseUrl, supabaseKey);

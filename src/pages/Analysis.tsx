@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FileUpload } from '../components/FileUpload';
 import { AnalysisResult } from '../components/AnalysisResult';
 import { analyzeHealthData } from '../services/analysis';
+import { getUserProfile } from '../services/profile';
 import { symptomCategories, symptoms } from '../data/symptoms';
-import type { AnalysisResult as AnalysisResultType } from '../services/analysis';
 import { AlertCircle, User, Calendar, Weight, Ruler, Activity } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 interface PersonalInfo {
   age: string;
@@ -16,6 +18,9 @@ interface PersonalInfo {
 }
 
 export const Analysis: React.FC = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [error, setError] = useState<string | null>(null);
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
@@ -28,8 +33,28 @@ export const Analysis: React.FC = () => {
   });
   const [additionalInfo, setAdditionalInfo] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [result, setResult] = useState<AnalysisResultType | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<any | null>(null);
+
+  // Profil bilgilerini yükle
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (user) {
+        const profile = await getUserProfile(user.id);
+        if (profile) {
+          setPersonalInfo({
+            age: profile.age || '',
+            gender: profile.gender || 'male',
+            weight: profile.weight || '',
+            height: profile.height || '',
+            chronicDiseases: profile.chronic_diseases || '',
+            medications: profile.medications || ''
+          });
+        }
+      }
+    };
+
+    loadProfile();
+  }, [user]);
 
   const handleSymptomChange = (symptom: string) => {
     setSelectedSymptoms(prev => 
@@ -49,38 +74,54 @@ export const Analysis: React.FC = () => {
     setError(null);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (selectedSymptoms.length === 0) {
-      setError('Lütfen en az bir belirti seçin');
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!user) {
+      setError('Lütfen giriş yapın');
       return;
     }
-
-    if (!personalInfo.age || !personalInfo.gender) {
-      setError('Lütfen yaş ve cinsiyet bilgilerinizi girin');
-      return;
-    }
-
-    setIsAnalyzing(true);
-    setError(null);
 
     try {
-      const analysisResult = await analyzeHealthData(
+      setIsAnalyzing(true);
+      setError(null);
+
+      const result = await analyzeHealthData(
         selectedFile,
         selectedSymptoms,
-        {
-          ...personalInfo,
-          additionalInfo
-        }
+        personalInfo,
+        user.id
       );
-      setResult(analysisResult);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Analiz sırasında bir hata oluştu');
+
+      // Sonuçları göster
+      navigate('/results', { state: { result } });
+    } catch (error) {
+      console.error('Analysis error:', error);
+      setError('Analiz sırasında bir hata oluştu. Lütfen tüm bilgileri doğru girdiğinizden emin olun.');
     } finally {
       setIsAnalyzing(false);
     }
   };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="max-w-md w-full space-y-8 text-center">
+          <h2 className="text-3xl font-extrabold text-gray-900">
+            Lütfen Giriş Yapın
+          </h2>
+          <p className="mt-2 text-gray-600">
+            Sağlık analizini kullanmak için giriş yapmanız gerekmektedir.
+          </p>
+          <button
+            onClick={() => navigate('/login')}
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+          >
+            Giriş Yap
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -116,13 +157,16 @@ export const Analysis: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Cinsiyet</label>
+                  <label htmlFor="gender" className="block text-sm font-medium text-gray-700">
+                    Cinsiyet
+                  </label>
                   <select
+                    id="gender"
                     name="gender"
-                    required
-                    value={personalInfo.gender}
+                    value={personalInfo.gender || 'other'}
                     onChange={handlePersonalInfoChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    required
                   >
                     <option value="male">Erkek</option>
                     <option value="female">Kadın</option>

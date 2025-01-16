@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { AuthUser, fetchUserProfile, signIn, signUp, signOut } from '../lib/auth';
-import { AppError } from '../utils/errorHandling';
+import { AuthUser, signIn, signUp, signOut } from '../lib/auth';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -27,8 +26,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          const profile = await fetchUserProfile(session.user.id);
-          setUser(profile);
+          setUser({
+            id: session.user.id,
+            email: session.user.email || ''
+          });
         }
       } catch (err) {
         console.error('Auth initialization error:', err);
@@ -41,8 +42,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        const profile = await fetchUserProfile(session.user.id);
-        setUser(profile);
+        setUser({
+          id: session.user.id,
+          email: session.user.email || ''
+        });
       } else {
         setUser(null);
       }
@@ -57,21 +60,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       const { user: authUser } = await signIn(email, password);
       if (authUser) {
-        navigate('/profile');
+        setUser({
+          id: authUser.id,
+          email: authUser.email || ''
+        });
+        navigate('/');
       }
     } catch (err) {
-      if (err instanceof AppError) {
-        setError(err.message);
-        if (err.code === 'auth/email-not-verified') {
-          // Handle unverified email case
-          navigate('/verify-email', { 
-            state: { email }
-          });
-          return;
-        }
-      } else {
-        setError('Giriş yapılırken bir hata oluştu');
-      }
+      setError(err instanceof Error ? err.message : 'Giriş yapılırken bir hata oluştu');
     } finally {
       setLoading(false);
     }
@@ -89,11 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       });
     } catch (err) {
-      if (err instanceof AppError) {
-        setError(err.message);
-      } else {
-        setError('Kayıt olurken bir hata oluştu');
-      }
+      setError(err instanceof Error ? err.message : 'Kayıt olurken bir hata oluştu');
     } finally {
       setLoading(false);
     }
@@ -101,31 +93,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      setError(null);
       await signOut();
       setUser(null);
       navigate('/login');
     } catch (err) {
-      if (err instanceof AppError) {
-        setError(err.message);
-      } else {
-        setError('Çıkış yapılırken bir hata oluştu');
-      }
+      setError(err instanceof Error ? err.message : 'Çıkış yapılırken bir hata oluştu');
     }
   };
 
   const clearError = () => setError(null);
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      loading, 
-      error,
-      login, 
-      logout, 
-      register,
-      clearError
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        error,
+        login,
+        logout,
+        register,
+        clearError
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
