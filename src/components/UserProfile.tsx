@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import emailjs from '@emailjs/browser';
 import {
   Box,
   Card,
@@ -21,7 +22,20 @@ import {
   Tab,
   Fade,
   useTheme,
-  Stack
+  Stack,
+  TextField,
+  DialogActions,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Container,
+  SpeedDial,
+  SpeedDialAction,
+  SpeedDialIcon,
+  Snackbar,
+  Alert,
+  Divider
 } from '@mui/material';
 import {
   LocalHospital,
@@ -37,9 +51,15 @@ import {
   CalendarMonth,
   LocalPharmacy,
   Restaurant,
-  DirectionsRun
+  DirectionsRun,
+  Message,
+  Phone,
+  WhatsApp,
+  ContactSupport
 } from '@mui/icons-material';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip, ResponsiveContainer, PieChart, Pie, Cell
+} from 'recharts';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -69,19 +89,46 @@ const TabPanel = (props: TabPanelProps) => {
 const UserProfile = () => {
   const { user } = useAuth();
   const theme = useTheme();
+  const form = useRef<HTMLFormElement>(null);
   const [openHealthDialog, setOpenHealthDialog] = useState(false);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [openContactDialog, setOpenContactDialog] = useState(false);
   const [tabValue, setTabValue] = useState(0);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+  const [loading, setLoading] = useState(false);
 
-  // Kullanıcı sağlık verileri (normalde API'den gelecek)
-  const userHealth = {
-    bloodType: 'A Rh+',
-    height: 175, // cm
-    weight: 70, // kg
-    bmi: 22.9,
-    lastUpdated: '15 Ocak 2025'
+  // VKİ hesaplama fonksiyonu
+  const calculateBMI = (weight: number, height: number) => {
+    const heightInMeters = height / 100;
+    return Number((weight / (heightInMeters * heightInMeters)).toFixed(1));
   };
 
-  // VKİ durumu hesaplama
+  // Kullanıcı sağlık verileri (normalde API'den gelecek)
+  const [healthData, setHealthData] = useState({
+    bloodType: 'A Rh+',
+    height: 175,
+    weight: 70,
+    bmi: calculateBMI(70, 175), // Boy ve kilodan otomatik hesaplama
+    lastUpdated: new Date().toLocaleDateString('tr-TR')
+  });
+
+  // Düzenleme formu için state
+  const [editForm, setEditForm] = useState({ ...healthData });
+
+  // İletişim formu state'i
+  const [contactForm, setContactForm] = useState({
+    subject: '',
+    message: '',
+    email: 'omerkonca01@gmail.com'
+  });
+
+  const bloodTypes = [
+    'A Rh+', 'A Rh-', 
+    'B Rh+', 'B Rh-', 
+    'AB Rh+', 'AB Rh-', 
+    '0 Rh+', '0 Rh-'
+  ];
+
   const getBMIStatus = (bmi: number) => {
     if (bmi < 18.5) return { text: 'Zayıf', color: theme.palette.warning.main };
     if (bmi < 25) return { text: 'Normal', color: theme.palette.success.main };
@@ -89,9 +136,72 @@ const UserProfile = () => {
     return { text: 'Obez', color: theme.palette.error.main };
   };
 
-  const bmiStatus = getBMIStatus(userHealth.bmi);
+  // Form değişikliklerini yönetme
+  const handleFormChange = (field: string, value: number | string) => {
+    const newForm = { ...editForm, [field]: value };
+    
+    // Boy veya kilo değiştiğinde VKİ'yi otomatik güncelle
+    if (field === 'height' || field === 'weight') {
+      const height = field === 'height' ? Number(value) : editForm.height;
+      const weight = field === 'weight' ? Number(value) : editForm.weight;
+      newForm.bmi = calculateBMI(weight, height);
+    }
+    
+    setEditForm(newForm);
+  };
 
-  const healthData = [
+  // Değişiklikleri kaydetme
+  const handleEditSubmit = () => {
+    setHealthData({
+      ...editForm,
+      lastUpdated: new Date().toLocaleDateString('tr-TR')
+    });
+    setOpenEditDialog(false);
+  };
+
+  // EmailJS başlatma
+  useEffect(() => {
+    emailjs.init("KiW2zwwTLgRR7i5c0");
+  }, []);
+
+  // İletişim formu gönderme
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.current) return;
+
+    setLoading(true);
+    try {
+      const result = await emailjs.sendForm(
+        'service_imc2cxq',
+        'template_wy5x1ks',
+        form.current,
+        'KiW2zwwTLgRR7i5c0'
+      );
+
+      if (result.status === 200) {
+        setSnackbar({
+          open: true,
+          message: 'Mesajınız başarıyla gönderildi!',
+          severity: 'success'
+        });
+        setOpenContactDialog(false);
+        setContactForm({ ...contactForm, subject: '', message: '' });
+      }
+    } catch (error: any) {
+      console.error('Error sending message:', error);
+      setSnackbar({
+        open: true,
+        message: error?.text || 'Mesaj gönderilirken bir hata oluştu. Lütfen tekrar deneyin.',
+        severity: 'error'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const bmiStatus = getBMIStatus(healthData.bmi);
+
+  const performanceData = [
     { name: 'Ocak', value: 65 },
     { name: 'Şubat', value: 68 },
     { name: 'Mart', value: 72 },
@@ -147,7 +257,30 @@ const UserProfile = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 1200, margin: '0 auto', p: 3 }}>
+    <Box sx={{ maxWidth: 1200, margin: '0 auto', p: 3, position: 'relative' }}>
+      {/* Hızlı İletişim Butonu */}
+      <SpeedDial
+        ariaLabel="İletişim Seçenekleri"
+        sx={{ position: 'fixed', bottom: 16, right: 16 }}
+        icon={<SpeedDialIcon />}
+      >
+        <SpeedDialAction
+          icon={<Message />}
+          tooltipTitle="Mesaj Gönder"
+          onClick={() => setOpenContactDialog(true)}
+        />
+        <SpeedDialAction
+          icon={<WhatsApp />}
+          tooltipTitle="WhatsApp"
+          onClick={() => window.open('https://wa.me/+905555555555', '_blank')}
+        />
+        <SpeedDialAction
+          icon={<Phone />}
+          tooltipTitle="Ara"
+          onClick={() => window.open('tel:+905555555555')}
+        />
+      </SpeedDial>
+
       {/* Üst Bilgi Çubuğu */}
       <Paper 
         elevation={3} 
@@ -157,17 +290,30 @@ const UserProfile = () => {
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center',
-          background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.light} 90%)`
+          background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.light} 90%)`,
+          borderRadius: 2
         }}
       >
-        <Typography variant="h5" sx={{ color: 'white' }}>Sağlık Paneli</Typography>
-        <Box>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <ContactSupport sx={{ color: 'white', mr: 1 }} />
+          <Typography variant="h5" sx={{ color: 'white' }}>Sağlık Paneli</Typography>
+        </Box>
+        <Stack direction="row" spacing={1}>
+          <Tooltip title="Mesaj Gönder">
+            <IconButton 
+              color="inherit" 
+              sx={{ color: 'white' }}
+              onClick={() => setOpenContactDialog(true)}
+            >
+              <Message />
+            </IconButton>
+          </Tooltip>
           <IconButton color="inherit" sx={{ color: 'white' }}>
             <Badge badgeContent={2} color="error">
               <Notifications />
             </Badge>
           </IconButton>
-        </Box>
+        </Stack>
       </Paper>
 
       <Grid container spacing={3}>
@@ -183,6 +329,7 @@ const UserProfile = () => {
                   backgroundColor: 'rgba(0,0,0,0.04)',
                   '&:hover': { backgroundColor: 'rgba(0,0,0,0.08)' }
                 }}
+                onClick={() => setOpenEditDialog(true)}
               >
                 <Edit fontSize="small" />
               </IconButton>
@@ -228,9 +375,7 @@ const UserProfile = () => {
                       }}
                     >
                       <Typography variant="subtitle2">Kan Grubu</Typography>
-                      <Typography variant="h6" sx={{ mt: 1, fontWeight: 'bold' }}>
-                        {userHealth.bloodType}
-                      </Typography>
+                      <Typography variant="h6">{healthData.bloodType}</Typography>
                     </Paper>
                   </Grid>
                   <Grid item xs={6}>
@@ -243,8 +388,8 @@ const UserProfile = () => {
                       }}
                     >
                       <Typography variant="subtitle2">VKİ</Typography>
-                      <Typography variant="h6" sx={{ mt: 1, fontWeight: 'bold' }}>
-                        {userHealth.bmi.toFixed(1)}
+                      <Typography variant="h6" sx={{ color: bmiStatus.color }}>
+                        {healthData.bmi}
                       </Typography>
                       <Typography variant="caption">
                         {bmiStatus.text}
@@ -253,7 +398,7 @@ const UserProfile = () => {
                   </Grid>
                 </Grid>
                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-                  Son güncelleme: {userHealth.lastUpdated}
+                  Son güncelleme: {healthData.lastUpdated}
                 </Typography>
               </Box>
 
@@ -322,7 +467,7 @@ const UserProfile = () => {
                   Sağlık Performans Grafiği
                 </Typography>
                 <ResponsiveContainer width="100%" height={250}>
-                  <LineChart data={healthData}>
+                  <LineChart data={performanceData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
@@ -436,34 +581,70 @@ const UserProfile = () => {
 
         {/* En Yakın Sağlık Kuruluşları */}
         <Grid item xs={12}>
-          <Card elevation={6}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
-                <LocalHospital sx={{ mr: 1 }} />
-                En Yakın Sağlık Kuruluşları
-              </Typography>
-              <Button 
-                variant="contained" 
-                color="primary" 
-                fullWidth
-                startIcon={<LocationOn />}
-                sx={{ mt: 2 }}
-                onClick={() => {
-                  if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition((position) => {
-                      const { latitude, longitude } = position.coords;
-                      window.open(
-                        `https://www.google.com/maps/search/hastane/@${latitude},${longitude},14z`,
-                        '_blank'
-                      );
-                    });
-                  }
-                }}
-              >
-                En Yakın Hastaneleri Göster
-              </Button>
-            </CardContent>
-          </Card>
+          <Container maxWidth="lg">
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <Card elevation={6}>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                      <LocalHospital sx={{ mr: 1 }} />
+                      En Yakın Hastaneler
+                    </Typography>
+                    <Button 
+                      variant="contained" 
+                      color="primary" 
+                      fullWidth
+                      startIcon={<LocationOn />}
+                      sx={{ mt: 2 }}
+                      onClick={() => {
+                        if (navigator.geolocation) {
+                          navigator.geolocation.getCurrentPosition((position) => {
+                            const { latitude, longitude } = position.coords;
+                            window.open(
+                              `https://www.google.com/maps/search/hastane/@${latitude},${longitude},14z`,
+                              '_blank'
+                            );
+                          });
+                        }
+                      }}
+                    >
+                      Hastaneleri Göster
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Card elevation={6}>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                      <MedicalServices sx={{ mr: 1 }} />
+                      En Yakın Diş Klinikleri
+                    </Typography>
+                    <Button 
+                      variant="contained" 
+                      color="primary" 
+                      fullWidth
+                      startIcon={<LocationOn />}
+                      sx={{ mt: 2 }}
+                      onClick={() => {
+                        if (navigator.geolocation) {
+                          navigator.geolocation.getCurrentPosition((position) => {
+                            const { latitude, longitude } = position.coords;
+                            window.open(
+                              `https://www.google.com/maps/search/diş+kliniği/@${latitude},${longitude},14z`,
+                              '_blank'
+                            );
+                          });
+                        }
+                      }}
+                    >
+                      Diş Kliniklerini Göster
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+          </Container>
         </Grid>
       </Grid>
 
@@ -489,16 +670,16 @@ const UserProfile = () => {
               <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                 <Paper elevation={1} sx={{ p: 2, flex: 1 }}>
                   <Typography variant="subtitle2" color="text.secondary">Boy</Typography>
-                  <Typography variant="h6">{userHealth.height} cm</Typography>
+                  <Typography variant="h6">{healthData.height} cm</Typography>
                 </Paper>
                 <Paper elevation={1} sx={{ p: 2, flex: 1 }}>
                   <Typography variant="subtitle2" color="text.secondary">Kilo</Typography>
-                  <Typography variant="h6">{userHealth.weight} kg</Typography>
+                  <Typography variant="h6">{healthData.weight} kg</Typography>
                 </Paper>
                 <Paper elevation={1} sx={{ p: 2, flex: 1 }}>
                   <Typography variant="subtitle2" color="text.secondary">VKİ</Typography>
-                  <Typography variant="h6" sx={{ color: bmiStatus.color }}>
-                    {userHealth.bmi.toFixed(1)} ({bmiStatus.text})
+                  <Typography variant="h6" color={bmiStatus.color}>
+                    {healthData.bmi} ({bmiStatus.text})
                   </Typography>
                 </Paper>
               </Box>
@@ -528,6 +709,156 @@ const UserProfile = () => {
           </Grid>
         </DialogContent>
       </Dialog>
+
+      {/* Profil Düzenleme Dialog */}
+      <Dialog 
+        open={openEditDialog} 
+        onClose={() => setOpenEditDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Edit sx={{ mr: 1 }} />
+            Profil Bilgilerini Düzenle
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers>
+          <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <FormControl fullWidth>
+              <InputLabel>Kan Grubu</InputLabel>
+              <Select
+                value={editForm.bloodType}
+                label="Kan Grubu"
+                onChange={(e) => handleFormChange('bloodType', e.target.value)}
+              >
+                {bloodTypes.map((type) => (
+                  <MenuItem key={type} value={type}>{type}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+              label="Boy (cm)"
+              type="number"
+              value={editForm.height}
+              onChange={(e) => handleFormChange('height', Number(e.target.value))}
+              fullWidth
+              InputProps={{ inputProps: { min: 0, max: 300 } }}
+            />
+            <TextField
+              label="Kilo (kg)"
+              type="number"
+              value={editForm.weight}
+              onChange={(e) => handleFormChange('weight', Number(e.target.value))}
+              fullWidth
+              InputProps={{ inputProps: { min: 0, max: 300 } }}
+            />
+            <Paper sx={{ p: 2, bgcolor: 'background.default' }}>
+              <Typography variant="subtitle2" color="text.secondary">
+                Hesaplanan VKİ
+              </Typography>
+              <Typography variant="h6" color={bmiStatus.color}>
+                {editForm.bmi} - {getBMIStatus(editForm.bmi).text}
+              </Typography>
+            </Paper>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenEditDialog(false)}>İptal</Button>
+          <Button onClick={handleEditSubmit} variant="contained" color="primary">
+            Kaydet
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* İletişim Dialog */}
+      <Dialog 
+        open={openContactDialog} 
+        onClose={() => setOpenContactDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Message sx={{ mr: 1 }} />
+            Mesaj Gönder
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers>
+          <Box 
+            component="form" 
+            ref={form}
+            onSubmit={handleContactSubmit}
+            sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}
+          >
+            <input type="hidden" name="to_email" value={contactForm.email} />
+            <input type="hidden" name="from_name" value={user?.displayName || 'Kullanıcı'} />
+            <input type="hidden" name="reply_to" value={user?.email || contactForm.email} />
+            
+            <TextField
+              name="subject"
+              label="Konu"
+              value={contactForm.subject}
+              onChange={(e) => setContactForm({ ...contactForm, subject: e.target.value })}
+              fullWidth
+              required
+            />
+            <TextField
+              name="message"
+              label="Mesajınız"
+              value={contactForm.message}
+              onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+              multiline
+              rows={4}
+              fullWidth
+              required
+            />
+            <Paper sx={{ p: 2, bgcolor: 'background.default' }}>
+              <Typography variant="subtitle2" color="text.secondary">
+                İletişim Bilgileri
+              </Typography>
+              <Box sx={{ mt: 1 }}>
+                <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Email fontSize="small" color="primary" />
+                  {contactForm.email}
+                </Typography>
+                <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                  <Phone fontSize="small" color="primary" />
+                  +90 555 555 5555
+                </Typography>
+              </Box>
+            </Paper>
+            <DialogActions sx={{ px: 0, pb: 0 }}>
+              <Button onClick={() => setOpenContactDialog(false)}>İptal</Button>
+              <Button 
+                type="submit"
+                variant="contained" 
+                color="primary"
+                disabled={loading || !contactForm.subject || !contactForm.message}
+              >
+                {loading ? 'Gönderiliyor...' : 'Gönder'}
+              </Button>
+            </DialogActions>
+          </Box>
+        </DialogContent>
+      </Dialog>
+
+      {/* Snackbar Bildirimleri */}
+      <Snackbar 
+        open={snackbar.open} 
+        autoHideDuration={6000} 
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setSnackbar({ ...snackbar, open: false })} 
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
