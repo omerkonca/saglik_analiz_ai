@@ -16,7 +16,11 @@ export const useAnalysisHistory = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setHistory([]);
+      setLoading(false);
+      return;
+    }
 
     const fetchHistory = async () => {
       try {
@@ -39,27 +43,34 @@ export const useAnalysisHistory = () => {
   }, [user]);
 
   const addAnalysis = async (symptoms: string, result: any) => {
-    if (!user) return;
-
     try {
-      const { error } = await supabase
-        .from('analysis_history')
-        .insert([{
-          user_id: user.id,
+      if (user) {
+        const { error } = await supabase
+          .from('analysis_history')
+          .insert([{
+            user_id: user.id,
+            symptoms,
+            result
+          }]);
+
+        if (error) throw error;
+
+        const { data } = await supabase
+          .from('analysis_history')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        setHistory(data || []);
+      } else {
+        const tempAnalysis = {
+          id: Date.now().toString(),
           symptoms,
-          result
-        }]);
-
-      if (error) throw error;
-
-      // Refresh history
-      const { data } = await supabase
-        .from('analysis_history')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      setHistory(data || []);
+          result,
+          created_at: new Date().toISOString()
+        };
+        setHistory(prev => [tempAnalysis, ...prev]);
+      }
     } catch (err) {
       setError('Analiz kaydedilirken bir hata oluştu.');
     }

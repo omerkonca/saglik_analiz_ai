@@ -1,5 +1,3 @@
-import { healthDatabase, HealthCondition } from './healthDatabase';
-
 interface NearestHospital {
   name: string;
   address: string;
@@ -120,9 +118,6 @@ const deg2rad = (deg: number): number => {
 };
 
 const diagnoseSymptoms = (symptoms: Record<string, string[]>): AnalysisResult => {
-  // Belirtileri tek bir diziye birleştir
-  const allSymptoms = Object.values(symptoms).flat();
-
   // Kardiyovasküler belirtiler
   if (symptoms.kardiyovaskuler.includes('Göğüs ağrısı') || 
       symptoms.kardiyovaskuler.includes('Çarpıntı') ||
